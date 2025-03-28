@@ -62,10 +62,11 @@ const BabylonScene : React.FC = () => {
             event.preventDefault();
 
             if(event.shiftKey){
+                /* Shift + Scroll to zoom in-out */
                 camera.radius *= 1 + event.deltaY * 0.01;
             }
             else if(event.ctrlKey){
-                
+                /* Ctrl + Scroll to move horizontal  */
                 // camera.target.x -= event.deltaY * 0.01;
 
                 // move relative to camera rotation
@@ -73,7 +74,11 @@ const BabylonScene : React.FC = () => {
                 camera.target.addInPlace(rightVector.scale(-event.deltaY*0.01));
             }
             else{
-                camera.target.y += event.deltaY * 0.01;
+                /* Normal Scroll to move vertical */
+
+                // camera.target.y += event.deltaY * 0.01;
+                const upVector = camera.getDirection(BABYLON.Axis.Y);
+                camera.target.addInPlace(upVector.scale(event.deltaY*0.01));
             }
         }
 
