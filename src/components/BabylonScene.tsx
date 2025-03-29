@@ -2,22 +2,31 @@
 
 import { useEffect, useRef } from "react";
 import * as BABYLON from "@babylonjs/core";
+import "../css/BabylonScene.css"
 
 const BabylonScene : React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const sceneRef = useRef<BABYLON.Scene | null>(null);
+    const initialCameraState = useRef<{alpha: number; beta: number; radius: number}>({
+        alpha: Math.PI/2,
+        beta: Math.PI/4,
+        radius: 10
+    })
 
     useEffect (() => {
         if(canvasRef.current == null) return;
         // Babylon.js Engine
         const engine = new BABYLON.Engine(canvasRef.current, true);
         const scene = new BABYLON.Scene(engine);
+
+        sceneRef.current = scene;
     
         // Camera [ArcRotateCamera: used to point a target and can be rotate around]
         const camera = new BABYLON.ArcRotateCamera(
             "Camera",
-            Math.PI / 2,
-            Math.PI / 4,
-            10,
+            initialCameraState.current.alpha,
+            initialCameraState.current.beta,
+            initialCameraState.current.radius,
             BABYLON.Vector3.Zero(),
             scene
         );
@@ -38,15 +47,31 @@ const BabylonScene : React.FC = () => {
             "ground",
             {width: 10, height: 10},
             scene
-        )
+        );
     
         // Set Ground Material
         const groundMaterial = new BABYLON.StandardMaterial(
             "ground",
             scene
-        )
+        );
         groundMaterial.diffuseColor = new BABYLON.Color3(0.5,0.5,0.5);
-        ground.material = groundMaterial
+        ground.material = groundMaterial;
+
+        // Adding axis to origin
+        const xAxis = BABYLON.MeshBuilder.CreateLines("xAxis", {
+            points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(1, 0, 0)],
+            colors: [BABYLON.Color4.FromHexString("#FF0000"), BABYLON.Color4.FromHexString("#FF0000")]
+        }, scene);
+        
+        const yAxis = BABYLON.MeshBuilder.CreateLines("yAxis", {
+            points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(0,1,0)],
+            colors: [BABYLON.Color4.FromHexString("#00FF00"), BABYLON.Color4.FromHexString("#00FF00")]
+        }, scene);
+
+        const zAxis = BABYLON.MeshBuilder.CreateLines("zAxis", {
+            points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(0,0,1)],
+            colors: [BABYLON.Color4.FromHexString("#0000FF"), BABYLON.Color4.FromHexString("#0000FF")]
+        }, scene);
     
         // Handle window resizing
         window.addEventListener("resize", () => engine.resize()); // Resizes the canvas size dynamically when browser window size changes.
@@ -91,8 +116,25 @@ const BabylonScene : React.FC = () => {
         };
     },[]);
 
+    const resetCamera = () => {
+        if(!sceneRef.current) return;
+
+        const camera = sceneRef.current.activeCamera as BABYLON.ArcRotateCamera;
+        if(!camera) return;
+
+        // Reset
+        camera.alpha = initialCameraState.current.alpha;
+        camera.beta = initialCameraState.current.beta;
+        camera.radius = initialCameraState.current.radius;
+        camera.target = BABYLON.Vector3.Zero();
+
+    }
+
     return (
-        <canvas ref = {canvasRef} style={{width: "100%", height:"100%"}}/>
+        <div className="babylon-scene">
+            <div className="reset-camera" onClick={resetCamera}>Reset Camera</div>
+            <canvas ref = {canvasRef} style={{width: "100%", height:"100%"}}/>
+        </div>
     );
 };
 
